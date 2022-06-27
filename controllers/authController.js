@@ -2,62 +2,41 @@ const catchAsync = require("../middlewares/catchAsync");
 const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 const jwt = require("jsonwebtoken");
-const RefreshToken = require("../models/RefreshToken");
-const bcrypt = require("bcryptjs");
-
-const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
 exports.login = catchAsync(async (req, res) => {
-  const { email, password } = req.body;
-  const existedEmail = await User.findOne({ email });
-  if (!existedEmail) {
-    throw new ApiError(400, "email or password is incorrect");
+  const { password } = req.body;
+  const user = await User.findOne({ password });
+  if (user) {
+    const token = jwt.sign(
+      {
+        password: user.password,
+      },
+      "toithatsungungokkk",
+      {
+        expiresIn: 6000000,
+      }
+    );
+    res.status(200).json({
+      success: true,
+      data: {
+        ...user._doc,
+        token,
+      },
+    });
+  } else {
+    throw new ApiError(404, "User not found!");
   }
-  const isMatch = bcrypt.compareSync(password, existedEmail.password);
-  if (!isMatch) {
-    throw new ApiError(400, "email or password is incorrect");
-  }
-
-  const token = jwt.sign(
-    {
-      email: existedEmail.email,
-      role: existedEmail.role,
-    },
-    process.env.JWT_SECRET,
-    {
-      expiresIn: process.env.JWT_TOKEN_EXPRIED,
-    }
-  );
-
-  const refreshToken = await RefreshToken.createToken(existedEmail);
-  res.status(200).json({
-    success: true,
-    token,
-    refreshToken,
-    email,
-  });
 });
 
 exports.register = catchAsync(async (req, res) => {
-  const { email, password, fullname } = req.body;
-  if (!email || !password || !fullname) {
-    throw new ApiError(400, "Please enter all fields");
-  }
-  const users = await User.find({});
-  const existedEmail = users.some((val) => val.email === email);
-  if (existedEmail) {
-    throw new ApiError(400, "Email is existed!");
-  }
-  const customer = await stripe.customers.create({
-    email,
-  });
+  const { fullname, password, teamName } = req.body;
 
   const user = await User.create({
-    email,
-    password,
     fullname,
-    customerID: customer.id,
+    password,
+    teamName,
   });
+
   res.status(200).json({
     success: true,
     data: user,

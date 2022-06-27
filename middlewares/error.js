@@ -20,11 +20,12 @@ const catchError = (err, req, res, next) => {
   //    err.message = "Invalid ID";
   //  }
 
-  //  if (err.code === 11000) {
-  //    err.statusCode = 400;
-  //    const field = Object.keys(err.keyValue)[0];
-  //    err.message = `${field} is already existed.`;
-  //  }
+  // case duplicate
+  if (err.code === 11000) {
+    err.statusCode = 400;
+    const field = Object.keys(err.keyValue)[0];
+    err.message = `${field} must be unique!`;
+  }
 
   // 500: Internal server error
   res.status(err.statusCode || 500).json({
