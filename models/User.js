@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+const { stringify } = require("uuid");
 const Schema = mongoose.Schema;
 
 const UserSchema = new Schema(
@@ -18,9 +19,14 @@ const UserSchema = new Schema(
       type: String,
       required: [true, "Team name is required"],
     },
-    isClockin: {
-      type: Boolean,
-    },
+    timeSheets: [
+      {
+        timeClockin: String,
+        timeClockout: String,
+        imgClockin: String,
+        imgClockout: String,
+      },
+    ],
   },
   {
     timestamps: true,

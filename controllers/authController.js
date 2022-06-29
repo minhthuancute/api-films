@@ -70,36 +70,73 @@ exports.getProfile = catchAsync(async (req, res) => {
 });
 
 exports.clockIn = catchAsync(async (req, res) => {
-  const { user, timeStamps, imgUrl } = req.body;
+  const { id, timeClockin, imgClockin } = req.body;
 
   try {
-    const clockIn = await ClockIn.create({
-      user,
-      timeStamps,
-      imgUrl,
+    const user = await User.findById(id);
+    user.timeSheets.push({
+      timeClockin,
+      timeClockout: "",
+      imgClockin,
+      imgClockout: "",
     });
+    await user.save();
     res.status(200).json({
       success: true,
-      clockIn,
+      user,
     });
   } catch (error) {}
 });
+
+// exports.clockIn = catchAsync(async (req, res) => {
+//   const { user, timeStamps, imgUrl } = req.body;
+
+//   try {
+//     const clockIn = await ClockIn.create({
+//       user,
+//       timeStamps,
+//       imgUrl,
+//     });
+//     res.status(200).json({
+//       success: true,
+//       clockIn,
+//     });
+//   } catch (error) {}
+// });
 
 exports.clockOut = catchAsync(async (req, res) => {
-  const { user, timeStamps, imgUrl } = req.body;
+  const { id, timeClockout, imgClockout } = req.body;
 
   try {
-    const clockOut = await ClockOut.create({
-      user,
-      timeStamps,
-      imgUrl,
-    });
+    const user = await User.findById(id);
+    const length = user.timeSheets.length;
+    console.log(length);
+    user.timeSheets[length - 1].imgClockout = imgClockout;
+    user.timeSheets[length - 1].timeClockout = timeClockout;
+
+    await user.save();
     res.status(200).json({
       success: true,
-      clockOut,
+      user,
     });
   } catch (error) {}
 });
+
+// exports.clockOut = catchAsync(async (req, res) => {
+//   const { user, timeStamps, imgUrl } = req.body;
+
+//   try {
+//     const clockOut = await ClockOut.create({
+//       user,
+//       timeStamps,
+//       imgUrl,
+//     });
+//     res.status(200).json({
+//       success: true,
+//       clockOut,
+//     });
+//   } catch (error) {}
+// });
 
 exports.getListClockout = catchAsync(async (req, res) => {
   const { id } = req.query;
@@ -122,5 +159,15 @@ exports.getListClockIn = catchAsync(async (req, res) => {
   res.status(200).json({
     success: true,
     data: clockins,
+  });
+});
+
+exports.getTimeSheets = catchAsync(async (req, res) => {
+  const { id } = req.query;
+  const user = await User.findById(id);
+
+  res.status(200).json({
+    success: true,
+    data: user,
   });
 });
