@@ -7,7 +7,8 @@ const { limiter } = require("./middlewares/rateLimit");
 
 // routes
 const filmRoutes = require("./routes/filmRoutes");
-const userRoutes = require("./routes/userRoutes");
+// const userRoutes = require("./routes/userRoutes");
+const ktRoutes = require("./routes/ktRoutes");
 
 const { basicAuth } = require("./middlewares/basicAuth");
 
@@ -21,7 +22,7 @@ app.use(cors());
 
 // Endpoints
 app.use("/api/v1/film", filmRoutes);
-app.use("/api/v1/auth", userRoutes);
+app.use("/api/v1/auth", ktRoutes);
 app.use(catchError);
 
 app.listen(process.env.PORT, () => {

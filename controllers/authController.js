@@ -2,6 +2,8 @@ const catchAsync = require("../middlewares/catchAsync");
 const User = require("../models/User");
 const ApiError = require("../utils/ApiError");
 const jwt = require("jsonwebtoken");
+const ClockIn = require("../models/ClockIn");
+const ClockOut = require("../models/ClockOut");
 
 exports.login = catchAsync(async (req, res) => {
   const { password } = req.body;
@@ -11,16 +13,16 @@ exports.login = catchAsync(async (req, res) => {
       {
         password: user.password,
       },
-      "toithatsungungokkk",
+      process.env.JWT_SECRET,
       {
-        expiresIn: 6000000,
+        expiresIn: 600000,
       }
     );
     res.status(200).json({
       success: true,
       data: {
-        ...user._doc,
         token,
+        ...user._doc,
       },
     });
   } else {
@@ -45,7 +47,7 @@ exports.register = catchAsync(async (req, res) => {
 
 exports.getProfile = catchAsync(async (req, res) => {
   const headerToken = req.headers.authorization;
-
+  console.log(headerToken);
   if (!headerToken) {
     throw new ApiError(401, "Unauthorized");
   }
@@ -53,7 +55,7 @@ exports.getProfile = catchAsync(async (req, res) => {
   try {
     const user = jwt.verify(token, process.env.JWT_SECRET);
     const currentUser = await User.findOne({
-      email: user.email,
+      password: user.password,
     });
     res.status(200).json({
       success: true,
@@ -65,4 +67,60 @@ exports.getProfile = catchAsync(async (req, res) => {
     }
     throw new ApiError(401, "Unauthorized");
   }
+});
+
+exports.clockIn = catchAsync(async (req, res) => {
+  const { user, timeStamps, imgUrl } = req.body;
+
+  try {
+    const clockIn = await ClockIn.create({
+      user,
+      timeStamps,
+      imgUrl,
+    });
+    res.status(200).json({
+      success: true,
+      clockIn,
+    });
+  } catch (error) {}
+});
+
+exports.clockOut = catchAsync(async (req, res) => {
+  const { user, timeStamps, imgUrl } = req.body;
+
+  try {
+    const clockOut = await ClockOut.create({
+      user,
+      timeStamps,
+      imgUrl,
+    });
+    res.status(200).json({
+      success: true,
+      clockOut,
+    });
+  } catch (error) {}
+});
+
+exports.getListClockout = catchAsync(async (req, res) => {
+  const { id } = req.query;
+  const clockouts = await ClockOut.find({
+    user: id,
+  }).populate("user");
+
+  res.status(200).json({
+    success: true,
+    data: clockouts,
+  });
+});
+
+exports.getListClockIn = catchAsync(async (req, res) => {
+  const { id } = req.query;
+  const clockins = await ClockIn.find({
+    user: id,
+  }).populate("user");
+
+  res.status(200).json({
+    success: true,
+    data: clockins,
+  });
 });
